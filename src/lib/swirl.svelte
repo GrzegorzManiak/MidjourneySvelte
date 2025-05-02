@@ -1,6 +1,5 @@
 <script lang="ts">
-    import type * as Types from "$lib/types";
-	import { onDestroy } from 'svelte';
+	import {onDestroy} from 'svelte';
 	import {cn} from "$lib/utils";
 
 	const defaultSourceLines = Array.from({ length: 30 }, (_, i) =>
@@ -14,6 +13,7 @@
         sourceTextLines = defaultSourceLines,
         scrambleSourceSet = '!_+{}":<>M?][p][\'\;l\'/,abcdefghijklmnopqrstuvwxyz0123456789     ',
         interpolate = false,
+        fillWhiteSpace = true,
         numRows = 100,
         maxColumns = 150,
         fontSize = 14,
@@ -36,6 +36,8 @@
 		scrambleSourceSet?: string;
         /** Interpolate between characters */
         interpolate?: boolean;
+		/** Fill blanks with spiral */
+		fillWhiteSpace?: boolean;
         /** Total number of rows to display */
         numRows?: number;
         /** Maximum character width of a line (columns) */
@@ -64,16 +66,8 @@
         logoLeftCol = Math.floor((maxColumns - logoWidth) / 2);
     }
 
-	// --- Reactive State ---
-	interface LogoLineState {
-		text: string;
-		opacity: number;
-	}
-
 	// - State for background text lines abd logo text lines (text content and opacity)
 	let allTextLines = $state<string[]>(Array(numRows).fill(''));
-	let logoTextLines = $state<LogoLineState[]>(
-		logoCharacterGrid.map(() => ({ text: '', opacity: 0 })));
 
 	// --- Constants and Derived Values ---
 	const numSourceRows = sourceTextLines.length;
@@ -128,8 +122,6 @@
 
 			// - Create temporary arrays to batch updates
 			const nextAllTextLines: string[] = [];
-
-
 
 			for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
 				let currentLineOutput = '';
@@ -193,29 +185,21 @@
 								revealProgress
 							))) : scrambleSourceSet[Math.floor(Math.random() * scrambleSourceSet.length)];
 
-							// - Build the logo line string for this specific row
-							// Note: We update the state object later, this is just for temp assembly
-							currentLogoLineOutput += interpolatedChar;
-
 							// - Update background character based on reveal completion
 							if (revealProgress > 0.98) { scrambledChar = ' '; fullyScrambled = true; }
 							else scrambledChar = interpolatedChar;
 						}
 					}
 
-					// - Inside logo bounds but an empty/inactive part
-					else {
-						currentLogoLineOutput += ' ';
-
-						// - Get the target logo character
-                        const targetLogoChar = logoCharacterGrid[logoRelativeRow]?.[logoRelativeCol] || ' ';
-						scrambledChar = targetLogoChar;
+					// - Add the logo character to the output, blank if no character
+					else if (!fillWhiteSpace) {
+						scrambledChar = logoCharacterGrid[logoRelativeRow]?.[logoRelativeCol] || ' ';
                     }
 
-                    // - If it's the last character of the logo portion for this specific line
-					if (columnIndex === logoLeftCol + logoWidth && logoTextLines[logoRelativeRow]) {
-						logoTextLines[logoRelativeRow].text = currentLogoLineOutput;
-						logoTextLines[logoRelativeRow].opacity = revealProgress;
+					// - Instead of blank char, pass the spiral character
+					else {
+						const tempChar = logoCharacterGrid[logoRelativeRow]?.[logoRelativeCol] || ' ';
+						if (tempChar !== ' ') scrambledChar = tempChar;
 					}
 
 					currentLineOutput += scrambledChar;
@@ -258,15 +242,6 @@
             </text>
         {/each}
 
-        {#each logoTextLines as line, i}
-<!--            <text-->
-<!--                    x={logoLeftCol * fontSize * 0.6} y={(logoTopRow + i + 1) * lineHeightPx}-->
-<!--                    dominant-baseline="auto"-->
-<!--                    fill-opacity={line.opacity}-->
-<!--            >-->
-<!--                {line.text}-->
-<!--            </text>-->
-        {/each}
     </svg>
 </div>
 

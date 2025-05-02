@@ -52,8 +52,6 @@
 
         return Array.from(scrambleSet).join('');
     }
-
-	console.log(getScrambleSourceSet(textLogo));
 </script>
 
 <div>
