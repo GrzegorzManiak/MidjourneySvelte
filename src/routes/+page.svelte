@@ -1,6 +1,7 @@
 <script lang="ts">
 	import "../app.css";
 	import Swirl from "$lib/swirl.svelte";
+    import Figlet from "figlet";
 
 	const textLogo = `
  ██████╗ ██████╗ ███████╗███████╗ ██████╗  ██████╗ ██████╗ ███████╗
@@ -8,7 +9,8 @@
 ██║  ███╗██████╔╝  ███╔╝ █████╗  ██║  ███╗██║   ██║██████╔╝  ███╔╝
 ██║   ██║██╔══██╗ ███╔╝  ██╔══╝  ██║   ██║██║   ██║██╔══██╗ ███╔╝
 ╚██████╔╝██║  ██║███████╗███████╗╚██████╔╝╚██████╔╝██║  ██║███████╗
- ╚═════╝ ╚═╝  ╚═╝╚══════╝╚══════╝ ╚═════╝  ╚═════╝ ╚═╝  ╚═╝╚══════╝`;
+ ╚═════╝ ╚═╝  ╚═╝╚══════╝╚══════╝ ╚═════╝  ╚═════╝ ╚═╝  ╚═╝╚══════╝
+`;
 
 	const textLines = [
 		"hello, my name is Grzegorz, I am a software engineer",
@@ -57,6 +59,8 @@
 <div>
     <Swirl
             revealStyle="lock"
+            fillColor="#7af2ff"
+            revealDelaySec={1.5}
             lockChance={0.2}
             sourceTextLines={equalizeTextLines(textLines, " ")}
             logoCharacterGrid={processLogo(textLogo)}

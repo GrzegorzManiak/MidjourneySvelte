@@ -1,10 +1,7 @@
 <script lang="ts">
 	import {onDestroy} from 'svelte';
 	import {cn} from "$lib/utils";
-
-	const defaultSourceLines = Array.from({ length: 30 }, (_, i) =>
-		Math.random().toString(36).substring(2).padEnd(80, 'abcdefghijklmnopqrstuvwxyz0123456789').repeat(2).slice(0, 80 + (i % 10))
-	);
+	import type {SwirlProps} from "$lib/types";
 
 	// --- Helper Functions ---
 	function _lerp(a: number, b: number, t: number): number {
@@ -19,6 +16,10 @@
 		if (x < 0.5) return (1 - Math.sqrt(1 - Math.pow(2 * x, 2))) / 2;
 		else return (Math.sqrt(1 - Math.pow(-2 * x + 2, 2)) + 1) / 2;
 	}
+
+	const defaultSourceLines = Array.from({ length: 30 }, (_, i) =>
+		Math.random().toString(36).substring(2).padEnd(80, 'abcdefghijklmnopqrstuvwxyz0123456789').repeat(2).slice(0, 80 + (i % 10))
+	);
 
 	let {
 		logoCharacterGrid = [' Logo ' ],
@@ -41,48 +42,7 @@
         lerp = _lerp,
         clamp = _clamp,
         easeInOutCirc = _easeInOutCirc,
-	}: {
-        /** 2D array representing the target logo characters */
-        logoCharacterGrid?: string[];
-        /** Y-coordinate (row index) of the logo's top edge */
-        logoTopRow?: number;
-        /** X-coordinate (column index) of the logo's left edge */
-        logoLeftCol?: number;
-        /** Array of strings used as the source for scrambling characters */
-        sourceTextLines?: string[];
-		/** Scramble text set to display */
-		scrambleSourceSet?: string;
-        /** Reveal style */
-        revealStyle?: 'interpolate' | 'scramble' | 'lock' | 'none';
-		/** Lock chance (for reveal style 0-1) */
-		lockChance?: number;
-		/** Fill blanks with spiral */
-		fillWhiteSpace?: boolean;
-        /** Total number of rows to display */
-        numRows?: number;
-        /** Maximum character width of a line (columns) */
-        maxColumns?: number;
-        /** Font size for calculating positioning */
-        fontSize?: number;
-        /** Line height factor (e.g., 1.2) or fixed pixel value */
-        lineHeight?: number | string;
-        /** Fill color for the text */
-        fillColor?: string;
-        /** Throttle frame updates (milliseconds) */
-        frameThrottleMs?: number;
-        /** Delay before logo reveal starts (seconds) */
-        revealDelaySec?: number;
-        /** Duration of the logo reveal animation (seconds) */
-        revealDurationSec?: number;
-        /** Additional styles for the SVG Parent element */
-        style?: string;
-		/** Lerp function */
-		lerp?: (a: number, b: number, t: number) => number;
-		/** Clamp function */
-		clamp?: (val: number, min: number, max: number) => number;
-		/** Ease function */
-		easeInOutCirc?: (x: number) => number;
-	} = $props();
+	}: SwirlProps = $props();
 
 	// - Calculate center logo position if not provided
 	if (logoTopRow < 0 || logoTopRow < 0) {
@@ -137,6 +97,7 @@
 			const rawProgress = (elapsedSeconds - revealDelaySec) / revealDurationSec;
 			const clampedProgress = clamp(rawProgress, 0, 1);
 			const revealProgress = easeInOutCirc(clampedProgress);
+			const isRevealing = revealProgress > 0.01;
 
 			// - Create temporary arrays to batch updates
 			const nextAllTextLines: string[] = [];
@@ -190,7 +151,7 @@
 						continue;
 					}
 
-					if (!fullyScrambled && revealStyle !== 'none') {
+					if (!fullyScrambled && revealStyle !== 'none' && isRevealing) {
 						const targetLogoChar = logoCharacterGrid[logoRelativeRow]?.[logoRelativeCol] || ' ';
 						const hasLeftNeighbor = logoRelativeCol > 0 && logoCharacterGrid[logoRelativeRow][logoRelativeCol - 1] !== ' ';
 						const hasRightNeighbor = logoRelativeCol < logoWidth - 1 && logoCharacterGrid[logoRelativeRow][logoRelativeCol + 1] !== ' ';
@@ -245,14 +206,10 @@
 					}
 
 					// - Add the logo character to the output, blank if no character
-					else if (!fillWhiteSpace) {
-						scrambledChar = logoCharacterGrid[logoRelativeRow]?.[logoRelativeCol] || ' ';
-                    }
-
-					// - Instead of blank char, pass the spiral character
-					else {
+					else if (isRevealing) {
 						const tempChar = logoCharacterGrid[logoRelativeRow]?.[logoRelativeCol] || ' ';
-						if (tempChar !== ' ') scrambledChar = tempChar;
+						if (!fillWhiteSpace) scrambledChar = tempChar;
+						else if (tempChar !== ' ') scrambledChar = tempChar;
 					}
 
 					currentLineOutput += scrambledChar;
