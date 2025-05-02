@@ -6,6 +6,20 @@
 		Math.random().toString(36).substring(2).padEnd(80, 'abcdefghijklmnopqrstuvwxyz0123456789').repeat(2).slice(0, 80 + (i % 10))
 	);
 
+	// --- Helper Functions ---
+	function _lerp(a: number, b: number, t: number): number {
+		return a * (1 - t) + b * t;
+	}
+
+	function _clamp(val: number, min: number, max: number): number {
+		return Math.max(min, Math.min(val, max));
+	}
+
+	function _easeInOutCirc(x: number): number {
+		if (x < 0.5) return (1 - Math.sqrt(1 - Math.pow(2 * x, 2))) / 2;
+		else return (Math.sqrt(1 - Math.pow(-2 * x + 2, 2)) + 1) / 2;
+	}
+
 	let {
 		logoCharacterGrid = [' Logo ' ],
         logoTopRow = -1,
@@ -24,6 +38,9 @@
         revealDelaySec = 1.0,
         revealDurationSec = 2.0,
         style = '',
+        lerp = _lerp,
+        clamp = _clamp,
+        easeInOutCirc = _easeInOutCirc,
 	}: {
         /** 2D array representing the target logo characters */
         logoCharacterGrid?: string[];
@@ -59,6 +76,12 @@
         revealDurationSec?: number;
         /** Additional styles for the SVG Parent element */
         style?: string;
+		/** Lerp function */
+		lerp?: (a: number, b: number, t: number) => number;
+		/** Clamp function */
+		clamp?: (val: number, min: number, max: number) => number;
+		/** Ease function */
+		easeInOutCirc?: (x: number) => number;
 	} = $props();
 
 	// - Calculate center logo position if not provided
@@ -81,15 +104,6 @@
 		if (lineHeight.endsWith('px')) return parseFloat(lineHeight);
         return fontSize * (parseFloat(lineHeight) || 1.2);
 	})();
-
-	// --- Helper Functions ---
-	const lerp = (a: number, b: number, t: number): number => a * (1 - t) + b * t;
-	const clamp = (val: number, min: number, max: number): number => Math.max(min, Math.min(val, max));
-	const easeInOutCirc = (x: number): number => {
-		return x < 0.5
-			? (1 - Math.sqrt(1 - Math.pow(2 * x, 2))) / 2
-			: (Math.sqrt(1 - Math.pow(-2 * x + 2, 2)) + 1) / 2;
-	};
 
 	// --- Animation Effect ---
 	$effect(() => {
