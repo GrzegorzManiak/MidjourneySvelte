@@ -1,5 +1,5 @@
 <script lang="ts">
-	import {onDestroy} from 'svelte';
+	import {onDestroy, onMount} from 'svelte';
 	import {cn} from "$lib/utils";
 	import type {SwirlProps} from "$lib/types";
 
@@ -77,6 +77,7 @@
 		const handleVisibilityChange = () => {
 			isVisible = document.visibilityState === 'visible';
 			if (!isVisible) lastFrameTime = null;
+			charWidth = getMonoCharWidth(fontSize);
 		};
 
 		document.addEventListener('visibilitychange', handleVisibilityChange);
@@ -235,25 +236,41 @@
 		};
 	});
 
-	onDestroy(() => {
+	function getMonoCharWidth(fontSize: number, fontFamily = 'monospace'): number {
+		const span = document.createElement('span');
+		span.style.fontFamily = fontFamily;
+		span.style.fontSize = `${fontSize}px`;
+		span.style.position = 'absolute';
+		span.style.visibility = 'hidden';
+		span.textContent = 'M';
+		document.body.appendChild(span);
+		const width = span.offsetWidth;
+		document.body.removeChild(span);
+		return width / fontSize;
+	}
+
+	let charWidth = $state(fontSize * 0.6);
+	onMount(() => {
+		charWidth = getMonoCharWidth(fontSize);
 	});
 </script>
 
-<div class={cn(style, "flex justify-center items-center")}>
+<div class={cn(style, "w-screen h-screen flex items-center justify-center")}>
     <svg
-            width={maxColumns * fontSize * 0.6}
-            height={numRows * lineHeightPx}
-            class="whitespace-pre block"
+            class="block"
             font-family="monospace"
             font-size={fontSize}
             fill={fillColor}
+            viewBox={`0 0 ${maxColumns * fontSize * charWidth} ${numRows * lineHeightPx}`}
+            preserveAspectRatio="xMidYMid meet"
+            width="100%"
+            height="100%"
     >
         {#each allTextLines as line, i}
-            <text x="0" y={(i + 1) * lineHeightPx} dominant-baseline="auto">
+            <text x="0" y={(i + 1) * lineHeightPx}>
                 {line}
             </text>
         {/each}
-
     </svg>
 </div>
 

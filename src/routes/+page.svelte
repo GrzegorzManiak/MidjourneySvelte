@@ -56,14 +56,13 @@
     }
 </script>
 
-<div>
-    <Swirl
-            revealStyle="lock"
-            fillColor="#7af2ff"
-            revealDelaySec={1.5}
-            lockChance={0.2}
-            sourceTextLines={equalizeTextLines(textLines, " ")}
-            logoCharacterGrid={processLogo(textLogo)}
-            scrambleSourceSet={getScrambleSourceSet(textLogo)}
-            style={"w-screen h-screen bg-black"}/>
-</div>
+<Swirl
+        revealStyle="lock"
+        fillColor="#7af2ff"
+        revealDelaySec={1.5}
+        lockChance={0.2}
+        sourceTextLines={equalizeTextLines(textLines, " ")}
+        logoCharacterGrid={processLogo(textLogo)}
+        scrambleSourceSet={getScrambleSourceSet(textLogo)}
+        style={"w-screen h-screen"}
+/>
