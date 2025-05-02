@@ -65,6 +65,7 @@
         return fontSize * (parseFloat(lineHeight) || 1.2);
 	})();
 
+
 	// --- Animation Effect ---
 	$effect(() => {
 		let animationFrameId: number | null = null;
@@ -255,7 +256,7 @@
 	});
 </script>
 
-<div class={cn(style, "w-screen h-screen flex items-center justify-center")}>
+<div class={cn(style, "flex items-center justify-center")}>
     <svg
             class="block"
             font-family="monospace"

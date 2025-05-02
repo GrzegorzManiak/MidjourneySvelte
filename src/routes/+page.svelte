@@ -56,13 +56,20 @@
     }
 </script>
 
-<Swirl
-        revealStyle="lock"
-        fillColor="#7af2ff"
-        revealDelaySec={1.5}
-        lockChance={0.2}
-        sourceTextLines={equalizeTextLines(textLines, " ")}
-        logoCharacterGrid={processLogo(textLogo)}
-        scrambleSourceSet={getScrambleSourceSet(textLogo)}
-        style={"w-screen h-screen"}
-/>
+<div class="flex flex-col items-center justify-center h-screen bg-black overflow-hidden">
+    <div class="scale-[1.8] pr-6">
+        <Swirl
+            revealStyle="lock"
+            fillColor="#7af2ff"
+            revealDelaySec={1.5}
+            lockChance={0.2}
+            numRows={100}
+            maxColumns={150}
+            lineHeight={1.1}
+            sourceTextLines={equalizeTextLines(textLines, " ")}
+            logoCharacterGrid={processLogo(textLogo)}
+            scrambleSourceSet={getScrambleSourceSet(textLogo)}
+            style={"w-screen h-screen"}
+        />
+    </div>
+</div>
