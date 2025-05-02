@@ -56,6 +56,8 @@
 
 <div>
     <Swirl
+            revealStyle="lock"
+            lockChance={0.2}
             sourceTextLines={equalizeTextLines(textLines, " ")}
             logoCharacterGrid={processLogo(textLogo)}
             scrambleSourceSet={getScrambleSourceSet(textLogo)}

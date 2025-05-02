@@ -12,7 +12,8 @@
         logoLeftCol = -1,
         sourceTextLines = defaultSourceLines,
         scrambleSourceSet = '!_+{}":<>M?][p][\'\;l\'/,abcdefghijklmnopqrstuvwxyz0123456789     ',
-        interpolate = false,
+		revealStyle = 'lock',
+		lockChance = 0.2,
         fillWhiteSpace = true,
         numRows = 100,
         maxColumns = 150,
@@ -34,8 +35,10 @@
         sourceTextLines?: string[];
 		/** Scramble text set to display */
 		scrambleSourceSet?: string;
-        /** Interpolate between characters */
-        interpolate?: boolean;
+        /** Reveal style */
+        revealStyle?: 'interpolate' | 'scramble' | 'lock' | 'none';
+		/** Lock chance (for reveal style 0-1) */
+		lockChance?: number;
 		/** Fill blanks with spiral */
 		fillWhiteSpace?: boolean;
         /** Total number of rows to display */
@@ -95,6 +98,7 @@
 		let lastFrameTime: number | null = null;
 		let isVisible = true;
 		let fullyScrambled = false;
+		let lockMapSet: Map<number, Set<number>> = new Map();
 
 		const handleVisibilityChange = () => {
 			isVisible = document.visibilityState === 'visible';
@@ -125,7 +129,6 @@
 
 			for (let rowIndex = 0; rowIndex < numRows; rowIndex++) {
 				let currentLineOutput = '';
-				let currentLogoLineOutput = ''; // Only used if this row is part of the logo area
 
 				for (let columnIndex = 0; columnIndex < maxColumns; columnIndex++) {
 					// --- Coordinate Transformation ---
@@ -173,21 +176,57 @@
 						continue;
 					}
 
-					if (!fullyScrambled) {
+					if (!fullyScrambled && revealStyle !== 'none') {
 						const targetLogoChar = logoCharacterGrid[logoRelativeRow]?.[logoRelativeCol] || ' ';
 						const hasLeftNeighbor = logoRelativeCol > 0 && logoCharacterGrid[logoRelativeRow][logoRelativeCol - 1] !== ' ';
 						const hasRightNeighbor = logoRelativeCol < logoWidth - 1 && logoCharacterGrid[logoRelativeRow][logoRelativeCol + 1] !== ' ';
 
-						if (targetLogoChar === ' ' || !hasLeftNeighbor || !hasRightNeighbor) {
-							const interpolatedChar = interpolate ? String.fromCharCode(Math.round(lerp(
-								scrambledChar.charCodeAt(0),
-								targetLogoChar.charCodeAt(0),
-								revealProgress
-							))) : scrambleSourceSet[Math.floor(Math.random() * scrambleSourceSet.length)];
+						if (
+							targetLogoChar !== ' ' ||
+							(revealStyle !== 'lock' && (hasLeftNeighbor || hasRightNeighbor))
+						) {
+                            let interpolatedChar = ' ';
+							switch (revealStyle) {
+								case 'interpolate':
+									interpolatedChar = String.fromCharCode(Math.round(lerp(
+										scrambledChar.charCodeAt(0),
+                                        targetLogoChar.charCodeAt(0),
+                                        revealProgress
+                                    )));
+									break;
+
+                                case 'scramble':
+									interpolatedChar = scrambleSourceSet[Math.floor(Math.random() * scrambleSourceSet.length)];
+									break;
+
+                                case 'lock':
+									const x = logoRelativeCol + logoLeftCol;
+									const y = logoRelativeRow + logoTopRow;
+
+									if (!lockMapSet.has(y)) lockMapSet.set(y, new Set());
+									const lockMap = lockMapSet.get(y);
+
+									// - Check if the character is already locked
+                                    if (lockMap && lockMap.has(x)) {
+										interpolatedChar = targetLogoChar;
+										break;
+                                    }
+
+                                    // - Lock the character with a chance
+                                    if (Math.random() < lockChance) {
+										interpolatedChar = targetLogoChar;
+										lockMap?.add(x);
+										break;
+                                    }
+
+									// - If not locked, use the scrambled character
+                                    interpolatedChar = scrambleSourceSet[Math.floor(Math.random() * scrambleSourceSet.length)];
+                                    break;
+                            }
 
 							// - Update background character based on reveal completion
-							if (revealProgress > 0.98) { scrambledChar = ' '; fullyScrambled = true; }
-							else scrambledChar = interpolatedChar;
+							fullyScrambled = revealProgress > 0.98;
+							scrambledChar = interpolatedChar;
 						}
 					}
 
@@ -231,7 +270,9 @@
 
 <div class={cn(style, "flex justify-center items-center")}>
     <svg
-            width={maxColumns * fontSize * 0.6} height={numRows * lineHeightPx}
+            width={maxColumns * fontSize * 0.6}
+            height={numRows * lineHeightPx}
+            class="whitespace-pre block"
             font-family="monospace"
             font-size={fontSize}
             fill={fillColor}
